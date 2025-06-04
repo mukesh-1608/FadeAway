@@ -15,22 +15,25 @@ pipeline {
                 }
             }
         }
+        stage('Cleanup Old Containers') {
+            steps {
+                bat '''
+                echo "Stopping and removing any existing containers..."
+                docker stop fade-app fade-away-chat || echo "No containers to stop"
+                docker rm fade-app fade-away-chat || echo "No containers to remove"
+                '''
+            }
+        }
         stage('Run Container') {
             steps {
                 script {
-                    bat '''
-                    docker stop fade-away-chat || echo "No container to stop"
-                    docker rm fade-away-chat || echo "No container to remove"
-                    timeout /t 10 /nobreak > nul
-                    docker run --name fade-away-chat -p 3000:80 -d fade-away-chat:${env.BUILD_ID} || (
-                        echo "##[error] Failed to start container"
-                        docker logs fade-away-chat --tail 50 2>&1
-                        exit 1
-                    )
-                    echo "Container started successfully"
-                    timeout /t 5 /nobreak > nul
-                    docker ps -a | findstr "fade-away-chat"
-                    '''
+                    bat """
+                    echo "Starting new container..."
+                    docker run --name fade-away-chat -p 3000:80 -d fade-away-chat:${env.BUILD_ID}
+                    echo "Container started successfully!"
+                    timeout /t 5
+                    docker ps -a
+                    """
                 }
             }
         }
