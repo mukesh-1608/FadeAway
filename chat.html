@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fade Away | Private Chat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBC0Z51ccrzhiFQ_3FN5c1e06-qoiv48sQ",
+      authDomain: "disappchat.firebaseapp.com",
+      projectId: "disappchat",
+      storageBucket: "disappchat.firebasestorage.app",
+      messagingSenderId: "632092151966",
+      appId: "1:632092151966:web:19aee6f47a7870adf86b8f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    }
+    .message-in {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 18px 18px 18px 4px;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .message-out {
+      background: linear-gradient(135deg, #6e45e2 0%, #88d3ce 100%);
+      color: white;
+      border-radius: 18px 18px 4px 18px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeOut {
+      to { opacity: 0; height: 0; margin: 0; padding: 0; }
+    }
+    .animate-message {
+      animation: fadeIn 0.3s ease-out;
+    }
+    .fade-out {
+      animation: fadeOut 0.5s ease-out forwards;
+    }
+    .chat-container {
+      height: calc(100vh - 160px);
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .input-box {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="max-w-md mx-auto h-screen flex flex-col">
+    <header class="p-4 flex items-center justify-between border-b border-gray-800">
+      <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        <span class="ml-2 font-medium text-gray-200">Fade Away</span>
+      </div>
+      <button id="copyLinkBtn" class="text-cyan-300 text-sm font-medium flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+        </svg>
+        Invite
+      </button>
+    </header>
+
+    <div id="chatBox" class="chat-container p-4 overflow-y-auto space-y-3"></div>
+
+    <div class="p-4 border-t border-gray-800">
+      <div class="input-box flex items-center rounded-full px-4">
+        <input id="messageInput" type="text" placeholder="Type a message..." 
+               class="flex-1 py-3 bg-transparent focus:outline-none text-white placeholder-gray-400" autofocus>
+        <button onclick="sendMessage()" class="text-cyan-300 p-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+        </button>
+      </div>
+      <p class="text-center text-xs text-gray-500 mt-2">
+        Messages disappear after 10 seconds
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get('room');
+    const messagesRef = db.collection(`privateRooms/${roomId}/messages`);
+
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const message = input.value.trim();
+      if (!message) return;
+
+      messagesRef.add({
+        text: message,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        type: 'outgoing'
+      });
+
+      displayMessage(message, true);
+      input.value = '';
+    }
+
+    function displayMessage(text, isOutgoing = false) {
+      const chatBox = document.getElementById('chatBox');
+      const messageElement = document.createElement('div');
+      messageElement.className = `animate-message max-w-xs p-3 ${isOutgoing ? 'message-out ml-auto' : 'message-in'}`;
+      messageElement.textContent = text;
+      chatBox.appendChild(messageElement);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      setTimeout(() => {
+        messageElement.classList.add('fade-out');
+        setTimeout(() => messageElement.remove(), 500);
+      }, 10000); // 10 seconds
+    }
+
+    messagesRef
+      .orderBy('timestamp')
+      .onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === 'added' && !change.doc.metadata.hasPendingWrites) {
+            displayMessage(change.doc.data().text);
+          }
+        });
+      });
+
+    document.getElementById('copyLinkBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?room=${roomId}`);
+      
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-cyan-300 px-4 py-2 rounded-lg text-sm';
+      toast.textContent = 'Link copied! Share it securely.';
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.remove();
+      }, 2000);
+    });
+
+    document.getElementById('messageInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
+</body>
+</html>

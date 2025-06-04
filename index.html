@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fade Away | Ephemeral Chats</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBC0Z51ccrzhiFQ_3FN5c1e06-qoiv48sQ",
+      authDomain: "disappchat.firebaseapp.com",
+      projectId: "disappchat",
+      storageBucket: "disappchat.firebasestorage.app",
+      messagingSenderId: "632092151966",
+      appId: "1:632092151966:web:19aee6f47a7870adf86b8f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    
+    function createRoom() {
+      const roomId = Math.random().toString(36).substring(2, 8);
+      window.location.href = `chat.html?room=${roomId}`;
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #6e45e2 0%, #88d3ce 100%);
+      box-shadow: 0 4px 20px rgba(110, 69, 226, 0.3);
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .floating {
+      animation: float 5s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+  <div class="max-w-md w-full">
+    <div class="card rounded-2xl p-8 shadow-2xl text-center">
+      <div class="floating mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="#88d3ce" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </div>
+      <h1 class="text-4xl font-bold text-white mb-2">Fade Away</h1>
+      <p class="text-gray-300 mb-6">Messages vanish like morning mist</p>
+      <button onclick="createRoom()" class="btn-primary text-white w-full py-3 rounded-xl font-medium transition hover:opacity-90">
+        Create Private Room
+      </button>
+    </div>
+    <p class="text-center text-gray-400 mt-6 text-sm">
+      All messages disappear after 10 seconds
+    </p>
+  </div>
+</body>
+</html>
