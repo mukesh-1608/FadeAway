@@ -1,64 +1,57 @@
 pipeline {
     agent any
 
+    environment {
+        // Replace with the ID you used to store your Slack bot token in Jenkins credentials (Secret Text)
+        SLACK_TOKEN = credentials('slack-token')
+        SLACK_CHANNEL = '#jenkins-notif'   // Replace with your actual Slack channel
+        SLACK_BOT_NAME = 'Jenkins Notif'
+    }
+
     stages {
-        stage('Checkout Code') {
+        stage('Build') {
             steps {
-                git branch: 'main', 
-                    url: 'https://github.com/mukesh-1608/FadeAway.git',
-                    credentialsId: 'e1eebe1b-334b-4600-92c4-480a8e015668'
+                echo 'Building the project...'
+                // Add your actual build commands here
             }
         }
 
-        stage('Install Dependencies and Test') {
+        stage('Test') {
             steps {
-                bat '''
-                echo Installing Node.js dependencies...
-                if exist node_modules (echo Dependencies already installed) else (npm install)
-                echo Running Tests...
-                npm test
-                '''
+                echo 'Running tests...'
+                // Add test steps here
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Deploy') {
             steps {
-                script {
-                    docker.build("fade-away-chat:${env.BUILD_ID}")
-                }
-            }
-        }
-
-        stage('Cleanup Old Containers') {
-            steps {
-                bat '''
-                echo Cleaning up old containers...
-                docker stop fade-away-chat || echo "No running container to stop"
-                docker rm fade-away-chat || echo "No container to remove"
-                '''
-            }
-        }
-
-        stage('Run Container') {
-            steps {
-                bat """
-                echo Running new container...
-                docker run --name fade-away-chat -d -p 3000:80 fade-away-chat:${env.BUILD_ID}
-                """
+                echo 'Deploying the application...'
+                // Add deployment steps here
             }
         }
     }
 
     post {
-        success {
-            bat 'echo Build Succeeded! && docker ps -a'
-            // Uncomment below for Slack notifications (after Slack setup)
-            // slackSend(channel: '#your-channel', message: "✅ Build #${env.BUILD_NUMBER} succeeded.")
-        }
         failure {
-            bat 'echo Build Failed!'
-            // Uncomment below for Slack notifications (after Slack setup)
-            // slackSend(channel: '#your-channel', message: "❌ Build #${env.BUILD_NUMBER} failed.")
+            script {
+                slackSend(
+                    channel: env.SLACK_CHANNEL,
+                    tokenCredentialId: 'slack-token',
+                    message: "*❌ Build Failed!* \nJob: `${env.JOB_NAME}`\nBuild: #${env.BUILD_NUMBER}\nURL: ${env.BUILD_URL}",
+                    username: env.SLACK_BOT_NAME
+                )
+            }
+        }
+
+        success {
+            script {
+                slackSend(
+                    channel: env.SLACK_CHANNEL,
+                    tokenCredentialId: 'slack-token',
+                    message: "*✅ Build Succeeded!* \nJob: `${env.JOB_NAME}`\nBuild: #${env.BUILD_NUMBER}\nURL: ${env.BUILD_URL}",
+                    username: env.SLACK_BOT_NAME
+                )
+            }
         }
     }
 }
