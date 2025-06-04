@@ -5,7 +5,7 @@ pipeline {
             steps {
                 git branch: 'main', 
                 url: 'https://github.com/mukesh-1608/FadeAway.git',
-                credentialsId: 'e1eebe1b-334b-4600-92c4-480a8e015668'  // Your actual credential ID
+                credentialsId: 'e1eebe1b-334b-4600-92c4-480a8e015668'
             }
         }
         stage('Build Docker Image') {
@@ -18,11 +18,9 @@ pipeline {
         stage('Run Container') {
             steps {
                 script {
-                    sh 'docker stop fade-away-chat || true'
-                    sh 'docker rm fade-away-chat || true'
-                    docker.image("fade-away-chat:${env.BUILD_ID}").run(
-                        "--name fade-away-chat -p 3000:80 -d"
-                    )
+                    bat 'docker stop fade-away-chat || echo "No container to stop"'
+                    bat 'docker rm fade-away-chat || echo "No container to remove"'
+                    bat 'docker run --name fade-away-chat -p 3000:80 -d fade-away-chat:${env.BUILD_ID}'
                 }
             }
         }
