@@ -1,13 +1,11 @@
-# Use the official nginx image (lightweight Alpine version)
+# Use the official nginx image
 FROM nginx:alpine
 
-# Delete default nginx files
+# Remove default nginx content
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy all your files to nginx's serving directory
+# Copy the frontend code into nginx's public folder
 COPY . /usr/share/nginx/html
 
-# Expose port 80 (default HTTP port for nginx)
+# Expose port 80
 EXPOSE 80
-
-# nginx starts automatically when container runs

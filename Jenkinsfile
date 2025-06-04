@@ -10,6 +10,17 @@ pipeline {
             }
         }
 
+        stage('Install Dependencies and Test') {
+            steps {
+                bat '''
+                echo Installing Node.js dependencies...
+                if exist node_modules (echo Dependencies already installed) else (npm install)
+                echo Running Tests...
+                npm test
+                '''
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
@@ -21,31 +32,33 @@ pipeline {
         stage('Cleanup Old Containers') {
             steps {
                 bat '''
-                echo "Stopping and removing any existing containers..."
-                docker stop fade-app fade-away-chat || exit 0
-                docker rm fade-app fade-away-chat || exit 0
+                echo Cleaning up old containers...
+                docker stop fade-away-chat || echo "No running container to stop"
+                docker rm fade-away-chat || echo "No container to remove"
                 '''
             }
         }
 
         stage('Run Container') {
             steps {
-                script {
-                    bat """
-                    echo "Starting new container..."
-                    docker run --name fade-away-chat -p 3000:80 -d fade-away-chat:${env.BUILD_ID}
-                    echo "Container started successfully!"
-                    timeout /t 5 > nul
-                    docker ps -a
-                    """
-                }
+                bat """
+                echo Running new container...
+                docker run --name fade-away-chat -d -p 3000:80 fade-away-chat:${env.BUILD_ID}
+                """
             }
         }
     }
 
     post {
-        always {
-            bat 'docker ps -a'
+        success {
+            bat 'echo Build Succeeded! && docker ps -a'
+            // Uncomment below for Slack notifications (after Slack setup)
+            // slackSend(channel: '#your-channel', message: "✅ Build #${env.BUILD_NUMBER} succeeded.")
+        }
+        failure {
+            bat 'echo Build Failed!'
+            // Uncomment below for Slack notifications (after Slack setup)
+            // slackSend(channel: '#your-channel', message: "❌ Build #${env.BUILD_NUMBER} failed.")
         }
     }
 }

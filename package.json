@@ -1,0 +1,11 @@
+{
+  "name": "fadeaway",
+  "version": "1.0.0",
+  "description": "FadeAway Chat App",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests yet!\" && exit 0"
+  },
+  "author": "Mukesh",
+  "license": "ISC"
+}
