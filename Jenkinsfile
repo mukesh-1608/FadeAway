@@ -4,8 +4,8 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 git branch: 'main', 
-                url: 'https://github.com/yourusername/fade-away-chat.git',
-                credentialsId: 'github-creds'
+                url: 'https://github.com/mukesh-1608/FadeAway.git',
+                credentialsId: 'e1eebe1b-334b-4600-92c4-480a8e015668'  // Your actual credential ID
             }
         }
         stage('Build Docker Image') {
