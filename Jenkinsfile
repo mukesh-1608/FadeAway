@@ -18,11 +18,26 @@ pipeline {
         stage('Run Container') {
             steps {
                 script {
-                    bat 'docker stop fade-away-chat || echo "No container to stop"'
-                    bat 'docker rm fade-away-chat || echo "No container to remove"'
-                    bat 'docker run --name fade-away-chat -p 3000:80 -d fade-away-chat:${env.BUILD_ID}'
+                    bat '''
+                    docker stop fade-away-chat || echo "No container to stop"
+                    docker rm fade-away-chat || echo "No container to remove"
+                    timeout /t 10 /nobreak > nul
+                    docker run --name fade-away-chat -p 3000:80 -d fade-away-chat:${env.BUILD_ID} || (
+                        echo "##[error] Failed to start container"
+                        docker logs fade-away-chat --tail 50 2>&1
+                        exit 1
+                    )
+                    echo "Container started successfully"
+                    timeout /t 5 /nobreak > nul
+                    docker ps -a | findstr "fade-away-chat"
+                    '''
                 }
             }
+        }
+    }
+    post {
+        always {
+            bat 'docker ps -a'
         }
     }
 }
