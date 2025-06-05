@@ -1,7 +1,7 @@
 const request = require('supertest');
 const assert = require('assert');
-// Change this line to 'server'
-const app = require('../server'); // Make sure this points to your new server.js file
+// This line should now correctly point to your 'server' file, one directory up
+const app = require('../server'); 
 
 describe('FadeAway API Tests', () => {
   // Test the root endpoint
