@@ -1,14 +1,6 @@
 pipeline {
     agent any
 
-    // Removed the empty 'environment {}' block as it causes an error
-    // If you need environment variables later, add them here:
-    /*
-    environment {
-        MY_VAR = 'some-value'
-    }
-    */
-
     stages {
         stage('Declarative: Checkout SCM') {
             steps {
@@ -42,8 +34,8 @@ pipeline {
                 bat 'docker stop fadeaway-container 2>NUL || exit /b 0'
                 bat 'docker rm fadeaway-container 2>NUL || exit /b 0'
 
-                // THIS IS THE MISSING LINE: Add a small delay to ensure the port is completely freed by Docker
-                bat 'timeout /t 5' // This waits for 5 seconds
+                // CHANGED: Use Jenkins's built-in sleep step for a delay
+                sleep 5 // This waits for 5 seconds
 
                 // Now run the new container
                 bat 'docker run -d -p 3000:3000 --name fadeaway-container fadeaway-app'
