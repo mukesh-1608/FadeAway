@@ -36,10 +36,16 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 echo 'Running the Docker container...'
-                // This makes the command succeed in batch even if docker stop/rm fails (e.g., container not found)
+                // Attempt to stop and remove previous container.
+                // '2>NUL' suppresses error messages. '|| exit /b 0' ensures the batch command
+                // itself doesn't fail if docker stop/rm command returns an error (e.g., container not found).
                 bat 'docker stop fadeaway-container 2>NUL || exit /b 0'
                 bat 'docker rm fadeaway-container 2>NUL || exit /b 0'
 
+                // THIS IS THE MISSING LINE: Add a small delay to ensure the port is completely freed by Docker
+                bat 'timeout /t 5' // This waits for 5 seconds
+
+                // Now run the new container
                 bat 'docker run -d -p 3000:3000 --name fadeaway-container fadeaway-app'
                 echo 'Docker container is running on port 3000.'
             }
