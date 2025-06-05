@@ -1,11 +1,21 @@
 {
   "name": "fadeaway",
   "version": "1.0.0",
-  "description": "FadeAway Chat App",
-  "main": "index.js",
+  "description": "A simple Node.js application",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"No tests yet!\" && exit 0"
+    "start": "node server.js",
+    "build": "echo 'No specific build step for this simple app, just install dependencies.'",
+    "test": "mocha test/**/*.test.js"
   },
-  "author": "Mukesh",
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "mocha": "^10.4.0",
+    "supertest": "^7.0.0"
+  },
+  "keywords": [],
+  "author": "",
   "license": "ISC"
 }
