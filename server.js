@@ -8,8 +8,6 @@ app.get('/', (req, res) => {
   res.send('Hello, World!');
 });
 
-// You can add other API routes here if your backend expands (e.g., for handling API Gateway communication directly if needed)
-
 // 2. THEN, serve your static files.
 // This ensures that if a specific route matches, it handles it,
 // otherwise, it looks for a static file.
