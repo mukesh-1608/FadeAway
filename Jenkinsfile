@@ -2,55 +2,55 @@ pipeline {
     agent any
 
     environment {
-        // Replace with the ID you used to store your Slack bot token in Jenkins credentials (Secret Text)
-        SLACK_TOKEN = credentials('slack-token')
-        SLACK_CHANNEL = '#jenkins-notif'   // Replace with your actual Slack channel
-        SLACK_BOT_NAME = 'Jenkins Notif'
+        // SLACK_TOKEN is typically managed as a Jenkins credential,
+        // which you're already using in the post section.
+        // No need to define it directly here unless it's an environment variable on the agent.
     }
 
     stages {
+        stage('Declarative: Checkout SCM') { // This stage is usually handled automatically if you don't define it.
+            steps {
+                checkout scm
+            }
+        }
         stage('Build') {
             steps {
-                echo 'Building the project...'
-                // Add your actual build commands here
+                echo 'Building the project by installing Node.js dependencies...'
+                sh 'npm install' // Installs dependencies defined in package.json
             }
         }
-
         stage('Test') {
             steps {
-                echo 'Running tests...'
-                // Add test steps here
+                echo 'Running tests for the application...'
+                sh 'npm test' // Executes the 'test' script defined in package.json
             }
         }
-
-        stage('Deploy') {
+        stage('Build Docker Image') { // New stage name for clarity
             steps {
-                echo 'Deploying the application...'
-                // Add deployment steps here
+                echo 'Building the Docker image...'
+                // Build the Docker image with a tag
+                sh 'docker build -t fadeaway-app .'
+            }
+        }
+        stage('Run Docker Container') { // New stage for running the container
+            steps {
+                echo 'Running the Docker container...'
+                // First, stop and remove any existing container with the same name
+                sh 'docker stop fadeaway-container || true' // '|| true' prevents failure if container doesn't exist
+                sh 'docker rm fadeaway-container || true'
+                // Then, run the new container
+                sh 'docker run -d -p 3000:3000 --name fadeaway-container fadeaway-app'
+                echo 'Docker container is running on port 3000.'
             }
         }
     }
-
     post {
-        failure {
+        always {
             script {
-                slackSend(
-                    channel: env.SLACK_CHANNEL,
-                    tokenCredentialId: 'slack-token',
-                    message: "*❌ Build Failed!* \nJob: `${env.JOB_NAME}`\nBuild: #${env.BUILD_NUMBER}\nURL: ${env.BUILD_URL}",
-                    username: env.SLACK_BOT_NAME
-                )
-            }
-        }
-
-        success {
-            script {
-                slackSend(
-                    channel: env.SLACK_CHANNEL,
-                    tokenCredentialId: 'slack-token',
-                    message: "*✅ Build Succeeded!* \nJob: `${env.JOB_NAME}`\nBuild: #${env.BUILD_NUMBER}\nURL: ${env.BUILD_URL}",
-                    username: env.SLACK_BOT_NAME
-                )
+                // Slack notification (you can keep it or remove it as you wish)
+                // If you want to fix this, ensure 'slack-token' credential is set up correctly in Jenkins
+                // and your Jenkins instance can reach Slack API.
+                slackSend(channel: '#jenkins-notif', color: 'good', message: "Pipeline ${currentBuild.fullDisplayName} finished: ${currentBuild.currentResult}", tokenCredentialId: 'slack-token', username: 'Jenkins Notif')
             }
         }
     }
